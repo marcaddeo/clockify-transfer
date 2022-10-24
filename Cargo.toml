@@ -1,0 +1,15 @@
+[package]
+name = "clockify-transfer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4.22", features = ["serde"] }
+csv = "1.1.6"
+float_duration = "0.3.3"
+reqwest = { version = "0.11.12", features = ["json", "blocking"] }
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0.87"
+tabwriter = { version = "1.2.1", features = ["ansi_formatting"] }
