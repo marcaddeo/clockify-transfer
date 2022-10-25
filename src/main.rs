@@ -46,15 +46,21 @@ fn main() {
         records.push(result.unwrap());
     }
 
-    let mut output: String = String::new();
     for record in records {
-        output.push_str(&format!("{}\t // {}\t {}\t {}h\t ... ", record.issue_key, record.issue_summary, record.work_description, record.hours));
-        let project = PROJECTS.into_iter().filter(|(key, _)| key == &record.project_key).next();
+        write!(&mut tw, "{}\t // {}\t {}\t {}h\t ... ",
+            record.issue_key,
+            record.issue_summary,
+            record.work_description,
+            record.hours
+        ).unwrap();
+        let project = PROJECTS.into_iter()
+            .filter(|(key, _)| key == &record.project_key)
+            .next();
 
         let (_, project_id) = match project {
             Some(project) => project,
             None =>  {
-                output.push_str(&format!("Could not map project: {};\t skipped.\n", record.project_key));
+                write!(&mut tw, "Could not map project: {};\t skipped.\n", record.project_key).unwrap();
 
                 continue;
             },
@@ -75,13 +81,13 @@ fn main() {
             .unwrap();
 
         match response.error_for_status() {
-            Ok(_) => output.push_str("success."),
-            Err(_) => output.push_str("error."),
+            Ok(_) => write!(&mut tw, "success.").unwrap(),
+            Err(_) => write!(&mut tw, "error.").unwrap(),
         }
 
-        output.push_str("\n");
+        write!(&mut tw, "error.").unwrap();
+        write!(&mut tw, "\n").unwrap();
     }
 
-    tw.write_all(output.as_bytes()).unwrap();
     tw.flush().unwrap();
 }
