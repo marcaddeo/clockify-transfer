@@ -1,7 +1,6 @@
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{self, Deserialize, Deserializer, Serializer};
 
-
 const FORMAT: &'static str = "%Y-%m-%d %H:%M";
 
 // The signature of a serialize_with function must follow the pattern:
@@ -35,4 +34,3 @@ where
     Utc.datetime_from_str(&s, FORMAT)
         .map_err(serde::de::Error::custom)
 }
-

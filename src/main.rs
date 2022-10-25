@@ -1,10 +1,10 @@
-use std::io;
-use serde::Deserialize;
-use serde_json::json;
 use chrono::{DateTime, Utc};
 use float_duration::FloatDuration;
-use tabwriter::TabWriter;
+use serde::Deserialize;
+use serde_json::json;
+use std::io;
 use std::io::Write;
+use tabwriter::TabWriter;
 
 mod ymd_hm_format;
 
@@ -37,9 +37,7 @@ struct Record {
 fn main() {
     let client = reqwest::blocking::Client::new();
     let mut records: Vec<Record> = vec![];
-    let mut tw = TabWriter::new(io::stdout())
-        .minwidth(2)
-        .padding(2);
+    let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
     let mut reader = csv::Reader::from_reader(io::stdin());
     for result in reader.deserialize() {
@@ -47,23 +45,29 @@ fn main() {
     }
 
     for record in records {
-        write!(&mut tw, "{}\t // {}\t {}\t {}h\t ... ",
-            record.issue_key,
-            record.issue_summary,
-            record.work_description,
-            record.hours
-        ).unwrap();
-        let project = PROJECTS.into_iter()
+        write!(
+            &mut tw,
+            "{}\t // {}\t {}\t {}h\t ... ",
+            record.issue_key, record.issue_summary, record.work_description, record.hours
+        )
+        .unwrap();
+        let project = PROJECTS
+            .into_iter()
             .filter(|(key, _)| key == &record.project_key)
             .next();
 
         let (_, project_id) = match project {
             Some(project) => project,
-            None =>  {
-                write!(&mut tw, "Could not map project: {};\t skipped.\n", record.project_key).unwrap();
+            None => {
+                write!(
+                    &mut tw,
+                    "Could not map project: {};\t skipped.\n",
+                    record.project_key
+                )
+                .unwrap();
 
                 continue;
-            },
+            }
         };
 
         let json = json!({
@@ -74,7 +78,8 @@ fn main() {
         });
 
         let api_url = format!("{}/workspaces/{}/time-entries", API_BASE_PATH, WORKSPACE);
-        let response = client.post(api_url)
+        let response = client
+            .post(api_url)
             .header("X-Api-Key", API_KEY)
             .json(&json)
             .send()
