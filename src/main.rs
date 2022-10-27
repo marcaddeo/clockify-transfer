@@ -1,33 +1,32 @@
+use crate::csv::read_csv;
+use anyhow::{Context, Result};
+use clap::Parser;
+use cli::{Cli, Commands};
+use conf::Conf;
+use confique::Config;
 use float_duration::FloatDuration;
 use serde_json::json;
 use std::io;
 use std::io::Write;
 use tabwriter::TabWriter;
-use anyhow::{Result, Context};
-use cli::{Cli, Commands};
-use clap::Parser;
-use conf::Conf;
-use confique::Config;
-use crate::csv::read_csv;
 
-mod ymd_hm_format;
 mod cli;
 mod conf;
 mod csv;
+mod ymd_hm_format;
 
 fn transfer_time(cli: Cli) -> Result<()> {
     let config = Conf::from_file("config.yml")?;
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
-    let records = read_csv(cli.file.clone())
-        .with_context(|| {
-            if cli.file == "-" {
-                format!("Failed to read csv data from STDIN")
-            } else {
-                format!("Failed to read csv data from {}", cli.file)
-            }
-        })?;
+    let records = read_csv(cli.file.clone()).with_context(|| {
+        if cli.file == "-" {
+            format!("Failed to read csv data from STDIN")
+        } else {
+            format!("Failed to read csv data from {}", cli.file)
+        }
+    })?;
     for record in records {
         write!(
             &mut tw,
@@ -55,7 +54,10 @@ fn transfer_time(cli: Cli) -> Result<()> {
             "description": format!("{}: {}", record.issue_key, record.work_description),
         });
 
-        let api_url = format!("{}/workspaces/{}/time-entries", config.api_base_path, config.workspace_id);
+        let api_url = format!(
+            "{}/workspaces/{}/time-entries",
+            config.api_base_path, config.workspace_id
+        );
 
         if !cli.dry_run {
             let response = client
@@ -84,12 +86,8 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::ConfigTemplate) => {
-            conf::print_config_template()
-        },
-        None => {
-            transfer_time(cli)?
-        }
+        Some(Commands::ConfigTemplate) => conf::print_config_template(),
+        None => transfer_time(cli)?,
     }
 
     Ok(())

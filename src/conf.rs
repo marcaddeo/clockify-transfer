@@ -1,4 +1,4 @@
-use confique::{Config, yaml::FormatOptions};
+use confique::{yaml::FormatOptions, Config};
 use std::collections::HashMap;
 
 #[derive(Config, Debug)]

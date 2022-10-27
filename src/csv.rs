@@ -1,9 +1,9 @@
-use std::fs::File;
-use anyhow::Result;
-use serde::Deserialize;
-use chrono::{DateTime, Utc};
-use std::io;
 use super::ymd_hm_format;
+use anyhow::Result;
+use chrono::{DateTime, Utc};
+use serde::Deserialize;
+use std::fs::File;
+use std::io;
 
 #[derive(Debug, Deserialize)]
 pub struct Record {

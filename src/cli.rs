@@ -18,5 +18,4 @@ pub struct Cli {
 
     /// The Jira timesheet CSV export file. Use '-' to read from stdin.
     pub file: String,
-
 }
