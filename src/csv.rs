@@ -47,9 +47,9 @@ pub fn read_csv(file: String) -> Result<Vec<Record>> {
 pub fn write_issues(file: String, issues: Vec<Record>) -> Result<String> {
     let unprocessed_file;
     let iowtr: Box<dyn io::Write> = if file == "-" {
-        unprocessed_file = String::from("STDOUT");
+        unprocessed_file = String::from("STDERR");
 
-        Box::new(io::stdout())
+        Box::new(io::stderr())
     } else {
         unprocessed_file = format!("{}-unprocessed-issues", file);
 

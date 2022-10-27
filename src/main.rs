@@ -16,6 +16,7 @@ mod csv;
 mod ymd_hm_format;
 
 fn transfer(args: TransferArgs) -> Result<()> {
+    // @TODO decide on real config path.
     let config = Conf::from_file("config.yml")?;
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
@@ -86,7 +87,8 @@ fn transfer(args: TransferArgs) -> Result<()> {
 
     if unprocessed_records.len() > 0 {
         let unprocessed_file = write_issues(args.file, records)?;
-        println!("\n\nSome issues were not able to be transferred to Clockify. Check the output for more information. Unprocessed issues have been saved to: {}", unprocessed_file);
+        print!("\n\nWARNING: Some issues were transferred to Clockify. ");
+        println!("Unprocessed issues have been written to: {}", unprocessed_file);
     }
 
     Ok(())
