@@ -1,11 +1,11 @@
 use super::ymd_hm_format;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::fs::File;
 use std::io;
 
-#[derive(Debug, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Record {
     #[serde(rename = "Issue Key")]
     pub issue_key: String,
@@ -42,4 +42,24 @@ pub fn read_csv(file: String) -> Result<Vec<Record>> {
     }
 
     Ok(records)
+}
+
+pub fn write_issues(file: String, issues: Vec<Record>) -> Result<String> {
+    let unprocessed_file;
+    let iowtr: Box<dyn io::Write> = if file == "-" {
+        unprocessed_file = String::from("STDOUT");
+
+        Box::new(io::stdout())
+    } else {
+        unprocessed_file = format!("{}-unprocessed-issues", file);
+
+        Box::new(File::create(unprocessed_file.clone())?)
+    };
+
+    let mut wtr = csv::Writer::from_writer(iowtr);
+    for issue in issues {
+        wtr.serialize(issue)?;
+    }
+
+    Ok(unprocessed_file)
 }

@@ -1,7 +1,7 @@
-use crate::csv::read_csv;
+use crate::csv::{read_csv, write_issues, Record};
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use cli::{Cli, Commands, GlobalArgs};
+use cli::{Cli, Commands, TransferArgs};
 use conf::Conf;
 use confique::Config;
 use float_duration::FloatDuration;
@@ -15,19 +15,21 @@ mod conf;
 mod csv;
 mod ymd_hm_format;
 
-fn transfer_time(args: GlobalArgs) -> Result<()> {
+fn transfer(args: TransferArgs) -> Result<()> {
     let config = Conf::from_file("config.yml")?;
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
+    let mut unprocessed_records: Vec<Record> = vec![];
     let records = read_csv(args.file.clone()).with_context(|| {
+        // @TODO move this logic into read_csv errors.
         if args.file == "-" {
             format!("Failed to read csv data from STDIN")
         } else {
             format!("Failed to read csv data from {}", args.file)
         }
     })?;
-    for record in records {
+    for record in records.clone() {
         write!(
             &mut tw,
             "{}\t // {}\t {}\t {}h\t ... ",
@@ -68,7 +70,10 @@ fn transfer_time(args: GlobalArgs) -> Result<()> {
 
             match response.error_for_status() {
                 Ok(_) => write!(&mut tw, "success.")?,
-                Err(_) => write!(&mut tw, "error.")?,
+                Err(_) => {
+                    unprocessed_records.push(record);
+                    write!(&mut tw, "error.")?
+                },
             }
         } else {
             write!(&mut tw, "dry run.")?;
@@ -78,6 +83,11 @@ fn transfer_time(args: GlobalArgs) -> Result<()> {
     }
 
     tw.flush()?;
+
+    if unprocessed_records.len() > 0 {
+        let unprocessed_file = write_issues(args.file, records)?;
+        println!("\n\nSome issues were not able to be transferred to Clockify. Check the output for more information. Unprocessed issues have been saved to: {}", unprocessed_file);
+    }
 
     Ok(())
 }
@@ -93,7 +103,7 @@ fn main() -> Result<()> {
                 None => bail!("Could not parse CLI arguments"),
             };
 
-            transfer_time(args)?
+            transfer(args)?
         }
     }
 

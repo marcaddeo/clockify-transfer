@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Clone)]
-pub struct GlobalArgs {
+pub struct TransferArgs {
     /// Output what would happen, but don't actually submit to Clockify.
     #[arg(short, long)]
     pub dry_run: bool,
@@ -22,7 +22,7 @@ pub enum Commands {
 #[command(args_conflicts_with_subcommands(true))]
 pub struct Cli {
     #[command(flatten)]
-    pub args: Option<GlobalArgs>,
+    pub args: Option<TransferArgs>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
