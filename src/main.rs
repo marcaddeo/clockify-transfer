@@ -1,101 +1,21 @@
-use chrono::{DateTime, Utc};
 use float_duration::FloatDuration;
-use serde::Deserialize;
 use serde_json::json;
 use std::io;
 use std::io::Write;
 use tabwriter::TabWriter;
-use confique::{Config, yaml::FormatOptions};
-use std::collections::HashMap;
-use clap::{Parser, Subcommand};
-use std::fs::File;
 use anyhow::{Result, Context};
+use cli::{Cli, Commands};
+use clap::Parser;
+use conf::Conf;
+use confique::Config;
+use crate::csv::read_csv;
 
 mod ymd_hm_format;
+mod cli;
+mod conf;
+mod csv;
 
-#[derive(Subcommand, Clone)]
-enum Commands {
-    /// Print a config template.
-    ConfigTemplate,
-}
-
-#[derive(Parser)]
-#[command(arg_required_else_help(true))]
-struct Cli {
-    /// Output what would happen, but don't actually submit to Clockify.
-    #[arg(short, long)]
-    dry_run: bool,
-
-    #[command(subcommand)]
-    command: Option<Commands>,
-
-    /// The Jira timesheet CSV export file. Use '-' to read from stdin.
-    file: String,
-
-}
-
-#[derive(Config, Debug)]
-struct Conf {
-    /// The Clockify API base path.
-    #[config(default = "https://api.clockify.me/api/v1")]
-    api_base_path: String,
-
-    /// Your Clockify API key.
-    api_key: String,
-
-    /// Your Clockify Workspace ID.
-    workspace_id: String,
-
-    /// A mapping of Jira Project Key to Clockify project ID.
-    ///
-    /// Example:
-    ///
-    /// project_map:
-    ///   PROJ: 61e33e2d576aeb100a7ed74d
-    ///   ANOTHER: 6e56f6ea4cbeb210f8d5be0a
-    project_map: HashMap<String, String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Record {
-    #[serde(rename = "Issue Key")]
-    issue_key: String,
-    #[serde(rename = "Issue summary")]
-    issue_summary: String,
-    #[serde(rename = "Hours")]
-    hours: f64,
-    #[serde(rename = "Work date")]
-    #[serde(with = "ymd_hm_format")]
-    work_date: DateTime<Utc>,
-    #[serde(rename = "Project Key")]
-    project_key: String,
-    #[serde(rename = "Work Description")]
-    work_description: String,
-}
-
-fn read_csv(file: String) -> Result<Vec<Record>> {
-    let mut records: Vec<Record> = vec![];
-
-    let iordr: Box<dyn io::Read> = if file == "-" {
-        Box::new(io::stdin())
-    } else {
-        Box::new(File::open(file)?)
-    };
-
-    let mut rdr = csv::Reader::from_reader(iordr);
-    for result in rdr.deserialize() {
-        records.push(result?);
-    }
-
-    Ok(records)
-}
-
-fn print_config_template() {
-    let yaml = confique::yaml::template::<Conf>(FormatOptions::default());
-    println!("{}", yaml);
-}
-
-fn process_csv(cli: Cli) -> Result<()> {
+fn transfer_time(cli: Cli) -> Result<()> {
     let config = Conf::from_file("config.yml")?;
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
@@ -165,10 +85,10 @@ fn main() -> Result<()> {
 
     match &cli.command {
         Some(Commands::ConfigTemplate) => {
-            print_config_template()
+            conf::print_config_template()
         },
         None => {
-            process_csv(cli)?
+            transfer_time(cli)?
         }
     }
 
