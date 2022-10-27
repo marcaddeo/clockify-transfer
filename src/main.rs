@@ -1,7 +1,7 @@
 use crate::csv::read_csv;
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use cli::{Cli, GlobalArgs, Commands};
+use cli::{Cli, Commands, GlobalArgs};
 use conf::Conf;
 use confique::Config;
 use float_duration::FloatDuration;
@@ -94,7 +94,7 @@ fn main() -> Result<()> {
             };
 
             transfer_time(args)?
-        },
+        }
     }
 
     Ok(())
