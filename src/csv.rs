@@ -6,12 +6,12 @@ use std::fs::File;
 use std::io;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Record {
+pub struct Issue {
     #[serde(rename = "Issue Key")]
-    pub issue_key: String,
+    pub key: String,
 
     #[serde(rename = "Issue summary")]
-    pub issue_summary: String,
+    pub summary: String,
 
     #[serde(rename = "Hours")]
     pub hours: f64,
@@ -27,8 +27,8 @@ pub struct Record {
     pub work_description: String,
 }
 
-pub fn read_csv(file: String) -> Result<Vec<Record>> {
-    let mut records: Vec<Record> = vec![];
+pub fn read_issues(file: String) -> Result<Vec<Issue>> {
+    let mut issues: Vec<Issue> = vec![];
 
     let iordr: Box<dyn io::Read> = if file == "-" {
         Box::new(io::stdin())
@@ -37,14 +37,14 @@ pub fn read_csv(file: String) -> Result<Vec<Record>> {
     };
 
     let mut rdr = csv::Reader::from_reader(iordr);
-    for result in rdr.deserialize() {
-        records.push(result?);
+    for issue in rdr.deserialize() {
+        issues.push(issue?);
     }
 
-    Ok(records)
+    Ok(issues)
 }
 
-pub fn write_issues(file: String, issues: Vec<Record>) -> Result<String> {
+pub fn write_issues(file: String, issues: Vec<Issue>) -> Result<String> {
     let unprocessed_file;
     let iowtr: Box<dyn io::Write> = if file == "-" {
         unprocessed_file = String::from("STDERR");

@@ -1,4 +1,4 @@
-use crate::csv::{read_csv, write_issues, Record};
+use crate::csv::{read_issues, write_issues, Issue};
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::{Cli, Commands, TransferArgs};
@@ -21,29 +21,28 @@ fn transfer(args: TransferArgs) -> Result<()> {
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
-    let mut unprocessed_records: Vec<Record> = vec![];
-    let records = read_csv(args.file.clone()).with_context(|| {
-        // @TODO move this logic into read_csv errors.
+    let mut unprocessed_issues: Vec<Issue> = vec![];
+    let issues = read_issues(args.file.clone()).with_context(|| {
         if args.file == "-" {
             format!("Failed to read csv data from STDIN")
         } else {
             format!("Failed to read csv data from {}", args.file)
         }
     })?;
-    for record in records.clone() {
+    for issue in issues.clone() {
         write!(
             &mut tw,
             "{}\t // {}\t {}\t {}h\t ... ",
-            record.issue_key, record.issue_summary, record.work_description, record.hours
+            issue.key, issue.summary, issue.work_description, issue.hours
         )?;
 
-        let project_id = match config.project_map.get(&record.project_key) {
+        let project_id = match config.project_map.get(&issue.project_key) {
             Some(id) => id,
             None => {
                 write!(
                     &mut tw,
                     "Could not map project: {};\t skipped.\n",
-                    record.project_key
+                    issue.project_key
                 )?;
 
                 continue;
@@ -51,10 +50,10 @@ fn transfer(args: TransferArgs) -> Result<()> {
         };
 
         let json = json!({
-            "start": record.work_date,
-            "end": record.work_date + FloatDuration::hours(record.hours).to_chrono()?,
+            "start": issue.work_date,
+            "end": issue.work_date + FloatDuration::hours(issue.hours).to_chrono()?,
             "projectId": project_id,
-            "description": format!("{}: {}", record.issue_key, record.work_description),
+            "description": format!("{}: {}", issue.key, issue.work_description),
         });
 
         let api_url = format!(
@@ -72,7 +71,7 @@ fn transfer(args: TransferArgs) -> Result<()> {
             match response.error_for_status() {
                 Ok(_) => write!(&mut tw, "success.")?,
                 Err(_) => {
-                    unprocessed_records.push(record);
+                    unprocessed_issues.push(issue);
                     write!(&mut tw, "error.")?
                 },
             }
@@ -85,8 +84,8 @@ fn transfer(args: TransferArgs) -> Result<()> {
 
     tw.flush()?;
 
-    if unprocessed_records.len() > 0 {
-        let unprocessed_file = write_issues(args.file, records)?;
+    if unprocessed_issues.len() > 0 {
+        let unprocessed_file = write_issues(args.file, issues)?;
         print!("\n\nWARNING: Some issues were transferred to Clockify. ");
         println!("Unprocessed issues have been written to: {}", unprocessed_file);
     }
