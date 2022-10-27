@@ -1,7 +1,7 @@
 use crate::csv::read_csv;
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
-use cli::{Cli, Commands};
+use cli::{Cli, GlobalArgs, Commands};
 use conf::Conf;
 use confique::Config;
 use float_duration::FloatDuration;
@@ -15,16 +15,16 @@ mod conf;
 mod csv;
 mod ymd_hm_format;
 
-fn transfer_time(cli: Cli) -> Result<()> {
+fn transfer_time(args: GlobalArgs) -> Result<()> {
     let config = Conf::from_file("config.yml")?;
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
-    let records = read_csv(cli.file.clone()).with_context(|| {
-        if cli.file == "-" {
+    let records = read_csv(args.file.clone()).with_context(|| {
+        if args.file == "-" {
             format!("Failed to read csv data from STDIN")
         } else {
-            format!("Failed to read csv data from {}", cli.file)
+            format!("Failed to read csv data from {}", args.file)
         }
     })?;
     for record in records {
@@ -59,7 +59,7 @@ fn transfer_time(cli: Cli) -> Result<()> {
             config.api_base_path, config.workspace_id
         );
 
-        if !cli.dry_run {
+        if !args.dry_run {
             let response = client
                 .post(api_url)
                 .header("X-Api-Key", config.api_key.clone())
@@ -87,7 +87,14 @@ fn main() -> Result<()> {
 
     match &cli.command {
         Some(Commands::ConfigTemplate) => conf::print_config_template(),
-        None => transfer_time(cli)?,
+        None => {
+            let args = match cli.args {
+                Some(args) => args,
+                None => bail!("Could not parse CLI arguments"),
+            };
+
+            transfer_time(args)?
+        },
     }
 
     Ok(())
