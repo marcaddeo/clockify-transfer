@@ -1,7 +1,7 @@
 use super::ymd_hm_format;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io;
 

@@ -7,8 +7,8 @@ use float_duration::FloatDuration;
 use serde_json::json;
 use std::io;
 use std::io::Write;
-use tabwriter::TabWriter;
 use std::path::PathBuf;
+use tabwriter::TabWriter;
 
 mod cli;
 mod conf;
@@ -83,7 +83,7 @@ fn transfer(args: TransferArgs) -> Result<()> {
                 Err(_) => {
                     unprocessed_issues.push(issue);
                     write!(&mut tw, "error.")?
-                },
+                }
             }
         } else {
             write!(&mut tw, "dry run.")?;
@@ -97,7 +97,10 @@ fn transfer(args: TransferArgs) -> Result<()> {
     if unprocessed_issues.len() > 0 {
         let unprocessed_file = write_issues(args.file, issues)?;
         print!("\n\nWARNING: Some issues were transferred to Clockify. ");
-        println!("Unprocessed issues have been written to: {}", unprocessed_file);
+        println!(
+            "Unprocessed issues have been written to: {}",
+            unprocessed_file
+        );
     }
 
     Ok(())

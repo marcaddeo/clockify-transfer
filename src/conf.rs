@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
-use std::path::PathBuf;
 use confique::{yaml::FormatOptions, Config};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Config, Debug)]
 pub struct Conf {
@@ -28,10 +28,7 @@ pub struct Conf {
 impl Conf {
     pub fn load(config_path: Option<PathBuf>) -> Result<Conf> {
         let config_path = get_config_path(config_path)?;
-        let config = Conf::builder()
-            .env()
-            .file(config_path)
-            .load()?;
+        let config = Conf::builder().env().file(config_path).load()?;
 
         Ok(config)
     }
@@ -51,7 +48,7 @@ pub fn get_config_path(config_path: Option<PathBuf>) -> Result<PathBuf> {
         None => {
             let xdg_dirs = xdg::BaseDirectories::with_prefix("clockify-transfer")?;
             Ok(xdg_dirs.get_config_file("config.yml"))
-        },
+        }
     }
 }
 

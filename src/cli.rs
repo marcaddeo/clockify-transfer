@@ -20,7 +20,7 @@ pub enum Commands {
     /// Print a config template
     ConfigTemplate,
     /// Create a config file. Defaults to: $XDG_CONFIG/clockify-transfer/config.yml
-    Init { 
+    Init {
         /// Create configuration at a custom location.
         #[arg(short, long = "config", value_name = "FILE")]
         config_path: Option<PathBuf>,
