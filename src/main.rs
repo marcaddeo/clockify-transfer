@@ -3,21 +3,31 @@ use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::{Cli, Commands, TransferArgs};
 use conf::Conf;
-use confique::Config;
 use float_duration::FloatDuration;
 use serde_json::json;
 use std::io;
 use std::io::Write;
 use tabwriter::TabWriter;
+use std::path::PathBuf;
 
 mod cli;
 mod conf;
 mod csv;
 mod ymd_hm_format;
 
+fn init(config_path: Option<PathBuf>) -> Result<()> {
+    let config_path = conf::write_config_template(config_path)?;
+    let config_path_str = match config_path.to_str() {
+        Some(s) => s,
+        None => bail!("Could not convert path to string"),
+    };
+    println!("Configuration file created: {}", config_path_str);
+
+    Ok(())
+}
+
 fn transfer(args: TransferArgs) -> Result<()> {
-    // @TODO decide on real config path.
-    let config = Conf::from_file("config.yml")?;
+    let config = Conf::load(args.config_path)?;
     let client = reqwest::blocking::Client::new();
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
@@ -98,6 +108,7 @@ fn main() -> Result<()> {
 
     match &cli.command {
         Some(Commands::ConfigTemplate) => conf::print_config_template(),
+        Some(Commands::Init { config_path }) => init(config_path.clone())?,
         None => {
             let args = match cli.args {
                 Some(args) => args,

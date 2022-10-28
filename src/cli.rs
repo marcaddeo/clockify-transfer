@@ -1,19 +1,30 @@
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser, Clone)]
 pub struct TransferArgs {
+    /// The Jira timesheet CSV export file. Use '-' to read from stdin.
+    pub file: String,
+
     /// Output what would happen, but don't actually submit to Clockify.
     #[arg(short, long)]
     pub dry_run: bool,
 
-    /// The Jira timesheet CSV export file. Use '-' to read from stdin.
-    pub file: String,
+    /// Load configuration from a custom location. Defaults to: $XDG_CONFIG/clockify-transfer/config.yml
+    #[arg(short, long = "config", value_name = "FILE")]
+    pub config_path: Option<PathBuf>,
 }
 
 #[derive(Subcommand, Clone)]
 pub enum Commands {
-    /// Print a config template.
+    /// Print a config template
     ConfigTemplate,
+    /// Create a config file. Defaults to: $XDG_CONFIG/clockify-transfer/config.yml
+    Init { 
+        /// Create configuration at a custom location.
+        #[arg(short, long = "config", value_name = "FILE")]
+        config_path: Option<PathBuf>,
+    },
 }
 
 #[derive(Parser)]
