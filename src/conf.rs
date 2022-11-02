@@ -5,8 +5,8 @@ use std::path::PathBuf;
 
 #[derive(Config, Debug)]
 pub struct Conf {
-    /// The Clockify API base path.
-    #[config(default = "https://api.clockify.me/api/v1")]
+    /// The Clockify API base path, with a trailing slash.
+    #[config(default = "https://api.clockify.me/api/v1/")]
     pub api_base_path: String,
 
     /// Your Clockify API key.
@@ -15,13 +15,13 @@ pub struct Conf {
     /// Your Clockify Workspace ID.
     pub workspace_id: String,
 
-    /// A mapping of Jira Project Key to Clockify project ID.
+    /// A mapping of Jira Project Key to Clockify project names.
     ///
     /// Example:
     ///
     /// project_map:
-    ///   PROJ: 61e33e2d576aeb100a7ed74d
-    ///   ANOTHER: 6e56f6ea4cbeb210f8d5be0a
+    ///   PROJ: Project Name Goes Here
+    ///   ANOTHER: Another Project Name Goes Here
     pub project_map: HashMap<String, String>,
 }
 

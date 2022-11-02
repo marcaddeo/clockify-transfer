@@ -3,13 +3,13 @@ use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cli::{Cli, Commands, TransferArgs};
 use conf::Conf;
-use float_duration::FloatDuration;
-use serde_json::json;
 use std::io;
 use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
+use api::{ApiClient, TimeEntry};
 
+mod api;
 mod cli;
 mod conf;
 mod csv;
@@ -28,7 +28,10 @@ fn init(config_path: Option<PathBuf>) -> Result<()> {
 
 fn transfer(args: TransferArgs) -> Result<()> {
     let config = Conf::load(args.config_path)?;
-    let client = reqwest::blocking::Client::new();
+    let api_client = ApiClient::new(
+        config.api_base_path.as_str().into(),
+        config.api_key
+    )?;
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
     let mut unprocessed_issues: Vec<Issue> = vec![];
@@ -39,6 +42,8 @@ fn transfer(args: TransferArgs) -> Result<()> {
             format!("Failed to read csv data from {}", args.file)
         }
     })?;
+
+
     for issue in issues.clone() {
         write!(
             &mut tw,
@@ -46,12 +51,12 @@ fn transfer(args: TransferArgs) -> Result<()> {
             issue.key, issue.summary, issue.work_description, issue.hours
         )?;
 
-        let project_id = match config.project_map.get(&issue.project_key) {
-            Some(id) => id,
+        let project_name = match config.project_map.get(&issue.project_key) {
+            Some(name) => name,
             None => {
                 write!(
                     &mut tw,
-                    "Could not map project: {};\t skipped.\n",
+                    "Could not find project key in map: {};\t skipped.\n",
                     issue.project_key
                 )?;
 
@@ -59,26 +64,30 @@ fn transfer(args: TransferArgs) -> Result<()> {
             }
         };
 
-        let json = json!({
-            "start": issue.work_date,
-            "end": issue.work_date + FloatDuration::hours(issue.hours).to_chrono()?,
-            "projectId": project_id,
-            "description": format!("{}: {}", issue.key, issue.work_description),
-        });
+        let project_list = api_client.get_projects(config.workspace_id.clone())?;
+        let project = match project_list.into_iter().find(|project| &project.name == project_name) {
+            Some(project) => project,
+            None => {
+                write!(
+                    &mut tw,
+                    "Could not find Clockify project id for: {};\t skipped.\n",
+                    project_name
+                )?;
 
-        let api_url = format!(
-            "{}/workspaces/{}/time-entries",
-            config.api_base_path, config.workspace_id
-        );
+                continue;
+            }
+        };
 
         if !args.dry_run {
-            let response = client
-                .post(api_url)
-                .header("X-Api-Key", config.api_key.clone())
-                .json(&json)
-                .send()?;
+            let time_entry = TimeEntry::new(
+                project.id,
+                issue.work_date,
+                issue.hours,
+                format!("{}: {}", issue.key, issue.work_description)
+            )?;
 
-            match response.error_for_status() {
+            let response = api_client.post_time_entry(config.workspace_id.clone(), time_entry)?;
+            match response.error_for_status_ref() {
                 Ok(_) => write!(&mut tw, "success.")?,
                 Err(_) => {
                     unprocessed_issues.push(issue);
