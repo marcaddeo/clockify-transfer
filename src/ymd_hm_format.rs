@@ -1,7 +1,7 @@
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{self, Deserialize, Deserializer, Serializer};
 
-const FORMAT: &'static str = "%Y-%m-%d %H:%M";
+const FORMAT: &str = "%Y-%m-%d %H:%M";
 
 // The signature of a serialize_with function must follow the pattern:
 //

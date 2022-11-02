@@ -34,7 +34,7 @@ fn transfer(args: TransferArgs) -> Result<()> {
     let mut unprocessed_issues: Vec<Issue> = vec![];
     let issues = read_issues(args.file.clone()).with_context(|| {
         if args.file == "-" {
-            format!("Failed to read csv data from STDIN")
+            "Failed to read csv data from STDIN".to_string()
         } else {
             format!("Failed to read csv data from {}", args.file)
         }
@@ -50,9 +50,9 @@ fn transfer(args: TransferArgs) -> Result<()> {
         let project_name = match config.project_map.get(&issue.project_key) {
             Some(name) => name,
             None => {
-                write!(
+                writeln!(
                     &mut tw,
-                    "Could not find project key in map: {};\t skipped.\n",
+                    "Could not find project key in map: {};\t skipped.",
                     issue.project_key
                 )?;
 
@@ -67,9 +67,9 @@ fn transfer(args: TransferArgs) -> Result<()> {
         {
             Some(project) => project,
             None => {
-                write!(
+                writeln!(
                     &mut tw,
-                    "Could not find Clockify project id for: {};\t skipped.\n",
+                    "Could not find Clockify project id for: {};\t skipped.",
                     project_name
                 )?;
 
@@ -97,12 +97,12 @@ fn transfer(args: TransferArgs) -> Result<()> {
             write!(&mut tw, "dry run.")?;
         }
 
-        write!(&mut tw, "\n")?;
+        writeln!(&mut tw)?;
     }
 
     tw.flush()?;
 
-    if unprocessed_issues.len() > 0 {
+    if !unprocessed_issues.is_empty() {
         let unprocessed_file = write_issues(args.file, issues)?;
         print!("\n\nWARNING: Some issues were transferred to Clockify. ");
         println!(
