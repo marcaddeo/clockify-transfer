@@ -40,6 +40,16 @@ fn transfer(args: TransferArgs) -> Result<()> {
         }
     })?;
 
+    let workspace = match api_client.get_workspaces()?.into_iter().find(|workspace| workspace.name == config.workspace_name) {
+        Some(workspace) => workspace,
+        None => {
+            bail!(format!(
+                "Could not find Clockify workspace id for: {}. Exiting.",
+                config.workspace_name
+            ));
+        }
+    };
+
     for issue in issues.clone() {
         write!(
             &mut tw,
@@ -59,9 +69,7 @@ fn transfer(args: TransferArgs) -> Result<()> {
                 continue;
             }
         };
-
-        let project_list = api_client.get_projects(config.workspace_id.clone())?;
-        let project = match project_list
+        let project = match api_client.get_projects(&workspace.id)?
             .into_iter()
             .find(|project| &project.name == project_name)
         {
@@ -85,7 +93,7 @@ fn transfer(args: TransferArgs) -> Result<()> {
                 format!("{}: {}", issue.key, issue.work_description),
             )?;
 
-            let response = api_client.post_time_entry(config.workspace_id.clone(), time_entry)?;
+            let response = api_client.post_time_entry(&workspace.id, time_entry)?;
             match response.error_for_status_ref() {
                 Ok(_) => write!(&mut tw, "success.")?,
                 Err(_) => {

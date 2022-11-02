@@ -34,12 +34,11 @@ $ cargo install --git https://github.com/marcaddeo/clockify-transfer
 You can create a configuration file by running `clockify-transfer init`. This
 will create a configuration file that looks something like this:
 
-
 ```yml
-# The Clockify API base path.
+# The Clockify API base path, with a trailing slash.
 #
-# Default value: "https://api.clockify.me/api/v1"
-#api_base_path: "https://api.clockify.me/api/v1"
+# Default value: "https://api.clockify.me/api/v1/"
+#api_base_path: "https://api.clockify.me/api/v1/"
 
 # Your Clockify API key.
 #
@@ -51,18 +50,16 @@ will create a configuration file that looks something like this:
 # Required! This value must be specified.
 #workspace_id:
 
-# A mapping of Jira Project Key to Clockify project ID.
+# A mapping of Jira Project Key to Clockify project names.
 #
 # Example:
 #
 # project_map:
-#   PROJ: 61e33e2d576aeb100a7ed74d
-#   ANOTHER: 6e56f6ea4cbeb210f8d5be0a
+#   PROJ: Project Name Goes Here
+#   ANOTHER: Another Project Name Goes Here
 #
 # Required! This value must be specified.
 #project_map:
 ```
 
 You can get your API key by going to: https://app.clockify.me/user/settings
-
-The `workspace_id` can be found by 

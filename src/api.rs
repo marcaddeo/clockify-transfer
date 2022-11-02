@@ -44,6 +44,12 @@ pub struct Project {
     pub name: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Workspace {
+    pub id: String,
+    pub name: String,
+}
+
 pub struct ApiClient {
     base_url: Url,
     client: reqwest::blocking::Client,
@@ -62,23 +68,19 @@ impl ApiClient {
         })
     }
 
-    // let project_map: HashMap<String, String> = HashMap::new();
-    // for (key, name) in config.project_map {
-    //     let json = json!({
-    //         "start": issue.work_date,
-    //         "end": issue.work_date + FloatDuration::hours(issue.hours).to_chrono()?,
-    //         "projectId": project_id,
-    //         "description": format!("{}: {}", issue.key, issue.work_description),
-    //     });
+    pub fn get_workspaces(&self) -> Result<Vec<Workspace>> {
+        self.client
+            .get(
+                self.base_url
+                    .join("workspaces")?
+                    .as_str(),
+            )
+            .send()?
+            .json::<Vec<Workspace>>()
+            .map_err(anyhow::Error::from)
+    }
 
-    //     let api_url = format!(
-    //         "{}/workspaces/{}/time-entries",
-    //         config.api_base_path, config.workspace_id
-    //     );
-
-    // }
-
-    pub fn get_projects(&self, workspace: String) -> Result<Vec<Project>> {
+    pub fn get_projects(&self, workspace: &str) -> Result<Vec<Project>> {
         self.client
             .get(
                 self.base_url
@@ -90,7 +92,7 @@ impl ApiClient {
             .map_err(anyhow::Error::from)
     }
 
-    pub fn post_time_entry(&self, workspace: String, time_entry: TimeEntry) -> Result<Response> {
+    pub fn post_time_entry(&self, workspace: &str, time_entry: TimeEntry) -> Result<Response> {
         self.client
             .post(
                 self.base_url

@@ -12,10 +12,10 @@ pub struct Conf {
     /// Your Clockify API key.
     pub api_key: String,
 
-    /// Your Clockify Workspace ID.
-    pub workspace_id: String,
+    /// Your Clockify Workspace Name.
+    pub workspace_name: String,
 
-    /// A mapping of Jira Project Key to Clockify project names.
+    /// A mapping of Jira Project Key to Clockify Project Names.
     ///
     /// Example:
     ///
