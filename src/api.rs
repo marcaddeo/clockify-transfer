@@ -70,11 +70,7 @@ impl ApiClient {
 
     pub fn get_workspaces(&self) -> Result<Vec<Workspace>> {
         self.client
-            .get(
-                self.base_url
-                    .join("workspaces")?
-                    .as_str(),
-            )
+            .get(self.base_url.join("workspaces")?.as_str())
             .send()?
             .json::<Vec<Workspace>>()
             .map_err(anyhow::Error::from)

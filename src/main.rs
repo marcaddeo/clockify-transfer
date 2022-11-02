@@ -40,7 +40,11 @@ fn transfer(args: TransferArgs) -> Result<()> {
         }
     })?;
 
-    let workspace = match api_client.get_workspaces()?.into_iter().find(|workspace| workspace.name == config.workspace_name) {
+    let workspace = match api_client
+        .get_workspaces()?
+        .into_iter()
+        .find(|workspace| workspace.name == config.workspace_name)
+    {
         Some(workspace) => workspace,
         None => {
             bail!(format!(
@@ -69,7 +73,8 @@ fn transfer(args: TransferArgs) -> Result<()> {
                 continue;
             }
         };
-        let project = match api_client.get_projects(&workspace.id)?
+        let project = match api_client
+            .get_projects(&workspace.id)?
             .into_iter()
             .find(|project| &project.name == project_name)
         {
