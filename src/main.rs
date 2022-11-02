@@ -1,5 +1,6 @@
 use crate::csv::{read_issues, write_issues, Issue};
 use anyhow::{bail, Context, Result};
+use api::{ApiClient, TimeEntry};
 use clap::Parser;
 use cli::{Cli, Commands, TransferArgs};
 use conf::Conf;
@@ -7,7 +8,6 @@ use std::io;
 use std::io::Write;
 use std::path::PathBuf;
 use tabwriter::TabWriter;
-use api::{ApiClient, TimeEntry};
 
 mod api;
 mod cli;
@@ -28,10 +28,7 @@ fn init(config_path: Option<PathBuf>) -> Result<()> {
 
 fn transfer(args: TransferArgs) -> Result<()> {
     let config = Conf::load(args.config_path)?;
-    let api_client = ApiClient::new(
-        config.api_base_path.as_str().into(),
-        config.api_key
-    )?;
+    let api_client = ApiClient::new(config.api_base_path.as_str().into(), config.api_key)?;
     let mut tw = TabWriter::new(io::stdout()).minwidth(2).padding(2);
 
     let mut unprocessed_issues: Vec<Issue> = vec![];
@@ -42,7 +39,6 @@ fn transfer(args: TransferArgs) -> Result<()> {
             format!("Failed to read csv data from {}", args.file)
         }
     })?;
-
 
     for issue in issues.clone() {
         write!(
@@ -65,7 +61,10 @@ fn transfer(args: TransferArgs) -> Result<()> {
         };
 
         let project_list = api_client.get_projects(config.workspace_id.clone())?;
-        let project = match project_list.into_iter().find(|project| &project.name == project_name) {
+        let project = match project_list
+            .into_iter()
+            .find(|project| &project.name == project_name)
+        {
             Some(project) => project,
             None => {
                 write!(
@@ -83,7 +82,7 @@ fn transfer(args: TransferArgs) -> Result<()> {
                 project.id,
                 issue.work_date,
                 issue.hours,
-                format!("{}: {}", issue.key, issue.work_description)
+                format!("{}: {}", issue.key, issue.work_description),
             )?;
 
             let response = api_client.post_time_entry(config.workspace_id.clone(), time_entry)?;

@@ -1,11 +1,11 @@
 use super::ymd_hm_format;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use float_duration::FloatDuration;
-use reqwest::Url;
-use reqwest::header;
 use reqwest::blocking::{Client, Response};
+use reqwest::header;
+use reqwest::Url;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -21,7 +21,12 @@ pub struct TimeEntry {
 }
 
 impl TimeEntry {
-    pub fn new(project_id: String, start: DateTime<Utc>, hours: f64, description: String) -> Result<Self> {
+    pub fn new(
+        project_id: String,
+        start: DateTime<Utc>,
+        hours: f64,
+        description: String,
+    ) -> Result<Self> {
         // Hacky fix for timezone issue...
         let start = start + FloatDuration::hours(4.0).to_chrono()?;
         Ok(TimeEntry {
@@ -32,7 +37,6 @@ impl TimeEntry {
         })
     }
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Project {
@@ -50,9 +54,7 @@ impl ApiClient {
         let mut headers = header::HeaderMap::new();
         headers.insert("X-Api-Key", header::HeaderValue::from_str(&api_key)?);
 
-        let client = Client::builder()
-            .default_headers(headers)
-            .build()?;
+        let client = Client::builder().default_headers(headers).build()?;
 
         Ok(ApiClient {
             base_url: Url::parse(&base_url)?,
@@ -78,7 +80,11 @@ impl ApiClient {
 
     pub fn get_projects(&self, workspace: String) -> Result<Vec<Project>> {
         self.client
-            .get(self.base_url.join(&format!("workspaces/{}/projects", workspace))?.as_str())
+            .get(
+                self.base_url
+                    .join(&format!("workspaces/{}/projects", workspace))?
+                    .as_str(),
+            )
             .send()?
             .json::<Vec<Project>>()
             .map_err(anyhow::Error::from)
@@ -86,7 +92,11 @@ impl ApiClient {
 
     pub fn post_time_entry(&self, workspace: String, time_entry: TimeEntry) -> Result<Response> {
         self.client
-            .post(self.base_url.join(&format!("workspaces/{}/time-entries", workspace))?.as_str())
+            .post(
+                self.base_url
+                    .join(&format!("workspaces/{}/time-entries", workspace))?
+                    .as_str(),
+            )
             .json(&time_entry)
             .send()
             .map_err(anyhow::Error::from)
