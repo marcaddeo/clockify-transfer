@@ -45,12 +45,12 @@ will create a configuration file that looks something like this:
 # Required! This value must be specified.
 #api_key:
 
-# Your Clockify Workspace ID.
+# Your Clockify Workspace Name.
 #
 # Required! This value must be specified.
-#workspace_id:
+#workspace:
 
-# A mapping of Jira Project Key to Clockify project names.
+# A mapping of Jira Project Key to Clockify Project Names.
 #
 # Example:
 #

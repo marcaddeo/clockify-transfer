@@ -13,7 +13,7 @@ pub struct Conf {
     pub api_key: String,
 
     /// Your Clockify Workspace Name.
-    pub workspace_name: String,
+    pub workspace: String,
 
     /// A mapping of Jira Project Key to Clockify Project Names.
     ///

@@ -43,13 +43,13 @@ fn transfer(args: TransferArgs) -> Result<()> {
     let workspace = match api_client
         .get_workspaces()?
         .into_iter()
-        .find(|workspace| workspace.name == config.workspace_name)
+        .find(|workspace| workspace.name == config.workspace)
     {
         Some(workspace) => workspace,
         None => {
             bail!(format!(
                 "Could not find Clockify workspace id for: {}. Exiting.",
-                config.workspace_name
+                config.workspace
             ));
         }
     };
